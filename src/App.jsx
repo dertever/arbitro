@@ -33,7 +33,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
           <i className="ti ti-clock" style={{ fontSize: 48, color: 'var(--orange)', display: 'block', marginBottom: 16 }} />
           <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, marginBottom: 8, color: 'var(--navy)' }}>Cuenta pendiente</h2>
           <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
-            Tu solicitud está siendo revisada por un administrador. Recibirás un email cuando esté activada.
+            Tu solicitud está siendo revisada por un administrador del comité. Recibirás acceso en breve.
           </p>
           <button
             className="btn btn-outline"
@@ -46,7 +46,26 @@ function ProtectedRoute({ children, adminOnly = false }) {
     )
   }
 
-  if (profile?.status === 'blocked') return <Navigate to="/login" replace />
+  if (profile?.status === 'blocked') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--navy)' }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 40, maxWidth: 400, textAlign: 'center' }}>
+          <i className="ti ti-ban" style={{ fontSize: 48, color: 'var(--err)', display: 'block', marginBottom: 16 }} />
+          <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, marginBottom: 8, color: 'var(--navy)' }}>Cuenta desactivada</h2>
+          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
+            Tu cuenta ha sido bloqueada. Contacta con el comité de árbitros para más información.
+          </p>
+          <button
+            className="btn btn-outline"
+            onClick={() => supabase.auth.signOut().then(() => { window.location.href = '/login' })}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (adminOnly && profile?.role !== 'admin') return <Navigate to="/" replace />
 
   return children
@@ -75,6 +94,7 @@ export default function App() {
             <Route path="insignias" element={<Insignias />} />
             <Route path="misiones" element={<Misiones />} />
             <Route path="ranking" element={<Ranking />} />
+            {/* Admin — todas las subrutas */}
             <Route
               path="admin/*"
               element={
