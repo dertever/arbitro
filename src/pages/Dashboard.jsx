@@ -5,12 +5,12 @@ import { useAuth } from '../hooks/useAuth'
 import { BADGES_DEF, RARITY_LABEL } from '../lib/data'
 
 export default function Dashboard() {
-  const { profile } = useAuth()
-  const [stats, setStats] = useState({ tests: 0, correct_pct: 0, situaciones: 0, examenes: 0 })
+  const { profile, loading: authLoading } = useAuth()
+  const [stats, setStats] = useState({ tests: 0, correct_pct: 0, situaciones: 0 })
   const [unlockedBadges, setUnlockedBadges] = useState([])
   const [recentSits, setRecentSits] = useState([])
   const [nextExam, setNextExam] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [dataLoading, setDataLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
   const name = profile?.full_name ?? 'Árbitro'
@@ -20,11 +20,14 @@ export default function Dashboard() {
   const xpPct = Math.round((xpInLevel / 500) * 100)
 
   useEffect(() => {
-    if (!profile) return
+    // Esperar a que el auth termine de cargar
+    if (authLoading) return
+    // Si no hay profile tras el auth, no hay nada que cargar
+    if (!profile) { setDataLoading(false); return }
+
     let cancelled = false
-    // Timeout de seguridad: si en 8s no carga, mostrar error en vez de spinner infinito
     const timeout = setTimeout(() => {
-      if (!cancelled) { setLoadError(true); setLoading(false) }
+      if (!cancelled) { setLoadError(true); setDataLoading(false) }
     }, 8000)
 
     async function load() {
@@ -45,7 +48,7 @@ export default function Dashboard() {
         if (cancelled) return
         if (testData?.length) {
           const pct = Math.round(testData.reduce((a, t) => a + (t.score / t.total), 0) / testData.length * 100)
-          setStats(s => ({ ...s, tests: testData.length, correct_pct: pct, situaciones: sitAnswers?.length ?? 0 }))
+          setStats({ tests: testData.length, correct_pct: pct, situaciones: sitAnswers?.length ?? 0 })
         }
         if (badgeData) {
           setUnlockedBadges(
@@ -61,46 +64,76 @@ export default function Dashboard() {
         if (!cancelled) setLoadError(true)
       } finally {
         clearTimeout(timeout)
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setDataLoading(false)
       }
     }
     load()
     return () => { cancelled = true; clearTimeout(timeout) }
-  }, [profile])
+  }, [profile, authLoading])
 
-  // Supabase no configurado o perfil nulo tras timeout
-  if (!profile && !loading) {
+  // ── ESTADOS DE CARGA ──────────────────────────────────────────────────────
+
+  // Auth todavía resolviendo sesión
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 12 }}>
+        <div className="spinner" />
+        <p style={{ fontSize: 13, color: 'var(--muted)' }}>Verificando sesión...</p>
+      </div>
+    )
+  }
+
+  // Auth terminó pero profile es null → problema de Supabase/env vars
+  if (!profile) {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 16, padding: 40, maxWidth: 420, textAlign: 'center' }}>
-          <i className="ti ti-alert-triangle" style={{ fontSize: 40, color: 'var(--orange)', display: 'block', marginBottom: 16 }} />
-          <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, color: 'var(--navy)', marginBottom: 8 }}>No se pudo cargar el perfil</h3>
-          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
-            Comprueba que las variables de entorno <code style={{ background: 'var(--off)', padding: '1px 5px', borderRadius: 4 }}>VITE_SUPABASE_URL</code> y <code style={{ background: 'var(--off)', padding: '1px 5px', borderRadius: 4 }}>VITE_SUPABASE_ANON_KEY</code> están configuradas en Vercel.
+        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 16, padding: 40, maxWidth: 440, textAlign: 'center' }}>
+          <i className="ti ti-alert-triangle" style={{ fontSize: 44, color: 'var(--orange)', display: 'block', marginBottom: 16 }} />
+          <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, color: 'var(--navy)', marginBottom: 8 }}>
+            No se pudo cargar el perfil
+          </h3>
+          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7, marginBottom: 8 }}>
+            Estás autenticado pero tu perfil no existe en la base de datos, o hay un error de conexión con Supabase.
           </p>
-          <button className="btn btn-navy btn-sm" onClick={() => window.location.reload()}>
-            <i className="ti ti-refresh" /> Reintentar
-          </button>
+          <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
+            Comprueba en Vercel → Settings → Environment Variables que existen<br />
+            <code style={{ background: 'var(--off)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>VITE_SUPABASE_URL</code> y{' '}
+            <code style={{ background: 'var(--off)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>VITE_SUPABASE_ANON_KEY</code>
+          </p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button className="btn btn-navy btn-sm" onClick={() => window.location.reload()}>
+              <i className="ti ti-refresh" /> Reintentar
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => {
+              import('../lib/supabase').then(({ supabase }) => supabase.auth.signOut().then(() => { window.location.href = '/login' }))
+            }}>
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (!profile || loading) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 12 }}>
-      <div className="spinner" />
-      <p style={{ fontSize: 13, color: 'var(--muted)' }}>Cargando tu panel...</p>
-    </div>
-  )
+  // Profile cargado, datos del dashboard cargando
+  if (dataLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 12 }}>
+        <div className="spinner" />
+        <p style={{ fontSize: 13, color: 'var(--muted)' }}>Cargando tu panel...</p>
+      </div>
+    )
+  }
 
+  // Error en la carga de datos (timeout o excepción)
   if (loadError) {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 16, padding: 40, maxWidth: 400, textAlign: 'center' }}>
-          <i className="ti ti-wifi-off" style={{ fontSize: 40, color: 'var(--err)', display: 'block', marginBottom: 16 }} />
-          <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, color: 'var(--navy)', marginBottom: 8 }}>Error al cargar datos</h3>
+          <i className="ti ti-wifi-off" style={{ fontSize: 44, color: 'var(--err)', display: 'block', marginBottom: 16 }} />
+          <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, color: 'var(--navy)', marginBottom: 8 }}>Error de conexión</h3>
           <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
-            No se pudo conectar con la base de datos. Comprueba tu conexión e inténtalo de nuevo.
+            No se pudieron cargar los datos del panel. Comprueba tu conexión a internet.
           </p>
           <button className="btn btn-navy btn-sm" onClick={() => window.location.reload()}>
             <i className="ti ti-refresh" /> Reintentar
@@ -109,6 +142,8 @@ export default function Dashboard() {
       </div>
     )
   }
+
+  // ── RENDER NORMAL ─────────────────────────────────────────────────────────
 
   const iconBgMap    = { navy: '#eef1f8', orange: 'var(--orange-soft)', green: 'var(--ok-bg)', gold: '#fefce8', silver: '#f8fafc' }
   const iconColorMap = { navy: 'var(--navy3)', orange: 'var(--orange2)', green: 'var(--ok)', gold: '#a16207', silver: 'var(--silver)' }
@@ -163,10 +198,10 @@ export default function Dashboard() {
       <div className="g2">
         {/* Insignias */}
         <div className="card">
-          <div className="card-title"><i className="ti ti-medal" aria-hidden="true" />Últimas insignias</div>
+          <div className="card-title"><i className="ti ti-medal" />Últimas insignias</div>
           {unlockedBadges.length === 0 ? (
             <div className="empty-state">
-              <i className="ti ti-medal" aria-hidden="true" />
+              <i className="ti ti-medal" />
               <p>Completa tests para desbloquear insignias</p>
             </div>
           ) : (
@@ -174,7 +209,7 @@ export default function Dashboard() {
               {unlockedBadges.slice(0, 4).map(b => (
                 <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 34, height: 34, borderRadius: 8, background: iconBgMap[b.cls] ?? '#eef1f8', color: iconColorMap[b.cls] ?? 'var(--navy3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`ti ${b.icon}`} style={{ fontSize: 16 }} aria-hidden="true" />
+                    <i className={`ti ${b.icon}`} style={{ fontSize: 16 }} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 12, fontWeight: 600 }}>{b.name}</div>
@@ -184,7 +219,7 @@ export default function Dashboard() {
                 </div>
               ))}
               <Link to="/insignias" className="btn btn-navy btn-sm" style={{ marginTop: 4 }}>
-                <i className="ti ti-medal" aria-hidden="true" /> Ver todas
+                <i className="ti ti-medal" /> Ver todas
               </Link>
             </div>
           )}
@@ -192,17 +227,17 @@ export default function Dashboard() {
 
         {/* Situaciones */}
         <div className="card">
-          <div className="card-title"><i className="ti ti-video" aria-hidden="true" />Situaciones de partido</div>
+          <div className="card-title"><i className="ti ti-video" />Situaciones de partido</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {recentSits.length === 0 ? (
               <div className="empty-state">
-                <i className="ti ti-video" aria-hidden="true" />
+                <i className="ti ti-video" />
                 <p>No hay situaciones disponibles aún</p>
               </div>
             ) : recentSits.map(s => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ width: 36, height: 36, background: 'var(--navy)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="ti ti-player-play" style={{ fontSize: 15, color: 'var(--orange)', marginLeft: 2 }} aria-hidden="true" />
+                  <i className="ti ti-player-play" style={{ fontSize: 15, color: 'var(--orange)', marginLeft: 2 }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 600 }}>{s.title}</div>
@@ -212,7 +247,7 @@ export default function Dashboard() {
               </div>
             ))}
             <Link to="/situaciones" className="btn btn-orange btn-sm" style={{ marginTop: 4 }}>
-              <i className="ti ti-video" aria-hidden="true" /> Ver todas
+              <i className="ti ti-video" /> Ver todas
             </Link>
           </div>
         </div>
@@ -220,12 +255,12 @@ export default function Dashboard() {
 
       {/* Quick actions */}
       <div className="card">
-        <div className="card-title"><i className="ti ti-bolt" aria-hidden="true" />Práctica rápida</div>
+        <div className="card-title"><i className="ti ti-bolt" />Práctica rápida</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Link to="/tests" className="btn btn-navy"><i className="ti ti-clipboard-check" aria-hidden="true" /> Empezar test</Link>
-          <Link to="/situaciones" className="btn btn-orange"><i className="ti ti-video" aria-hidden="true" /> Resolver situación</Link>
-          <Link to="/temario" className="btn btn-outline"><i className="ti ti-book" aria-hidden="true" /> Repasar temario</Link>
-          {nextExam && <Link to="/examenes" className="btn btn-outline" style={{ borderColor: 'var(--orange)', color: 'var(--orange)' }}><i className="ti ti-file-certificate" aria-hidden="true" /> Examen oficial</Link>}
+          <Link to="/tests" className="btn btn-navy"><i className="ti ti-clipboard-check" /> Empezar test</Link>
+          <Link to="/situaciones" className="btn btn-orange"><i className="ti ti-video" /> Resolver situación</Link>
+          <Link to="/temario" className="btn btn-outline"><i className="ti ti-book" /> Repasar temario</Link>
+          {nextExam && <Link to="/examenes" className="btn btn-outline" style={{ borderColor: 'var(--orange)', color: 'var(--orange)' }}><i className="ti ti-file-certificate" /> Examen oficial</Link>}
         </div>
       </div>
     </>
