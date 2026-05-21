@@ -1,0 +1,186 @@
+export const REGLAS = [
+  { n: 1,  name: 'El terreno de juego',      tag: 'Dimensiones y marcas' },
+  { n: 2,  name: 'El balón',                 tag: 'Características oficiales' },
+  { n: 3,  name: 'El número de jugadores',   tag: 'Plantilla y sustituciones' },
+  { n: 4,  name: 'El equipo de los jugadores', tag: 'Equipación y seguridad' },
+  { n: 5,  name: 'El árbitro',               tag: 'Poderes y deberes' },
+  { n: 6,  name: 'Los otros oficiales',      tag: 'Asistentes, 4.º y VAR' },
+  { n: 7,  name: 'La duración del partido',  tag: 'Tiempos y prórrogas' },
+  { n: 8,  name: 'Inicio y reanudación',     tag: 'Saques y reanudaciones' },
+  { n: 9,  name: 'El balón en juego',        tag: 'Cuándo está en juego' },
+  { n: 10, name: 'El gol marcado',           tag: 'Cuándo es válido' },
+  { n: 11, name: 'El fuera de juego',        tag: 'Posición y delito' },
+  { n: 12, name: 'Faltas e incorrecciones',  tag: 'Infracciones y tarjetas' },
+  { n: 13, name: 'Tiros libres',             tag: 'Directos e indirectos' },
+  { n: 14, name: 'El penalti',               tag: 'Ejecución y rebotes' },
+  { n: 15, name: 'El saque de banda',        tag: 'Procedimiento' },
+  { n: 16, name: 'El saque de puerta',       tag: 'Saque del portero' },
+  { n: 17, name: 'El saque de esquina',      tag: 'El córner' },
+]
+
+export const REGLAS_DETAIL = {
+  1: {
+    desc: 'Define las dimensiones del campo y todas sus marcas. Longitud 90–120 m, anchura 45–90 m. Internacionalmente: 100–110 × 64–75 m.',
+    puntos: [
+      'La longitud siempre debe ser mayor que la anchura',
+      'El círculo central tiene radio de 9,15 m',
+      'El área de penalti: 40,32 × 16,5 m desde cada poste',
+      'La banderola de córner mide al menos 1,5 m de altura',
+      'El punto de penalti se sitúa a 11 m de la línea de gol',
+    ],
+  },
+  5: {
+    desc: 'El árbitro tiene autoridad plena desde que llega al estadio hasta que se marcha. Sus decisiones sobre hechos del juego son definitivas.',
+    puntos: [
+      'Puede modificar una decisión antes de reanudar el juego',
+      'Puede expulsar a cualquier persona del área técnica',
+      'Controla el tiempo del partido exclusivamente',
+      'El árbitro puede conceder ventaja y luego sancionar la infracción',
+    ],
+  },
+  11: {
+    desc: 'Un jugador en fuera de juego solo comete delito si está activo en el juego. No aplica en saque de puerta, de esquina o de centro.',
+    puntos: [
+      'Se juzga en el momento del pase, no de la recepción',
+      'Cualquier parte del cuerpo que pueda marcar gol cuenta',
+      'No es delito si el jugador no está activo en el juego',
+      'El asistente espera a que el jugador reciba el balón antes de señalar',
+    ],
+  },
+  12: {
+    desc: '10 infracciones de tiro libre directo y otras de tiro libre indirecto. Conductas sancionables con amarilla o roja.',
+    puntos: [
+      '10 tipos de infracción dan lugar a tiro libre directo',
+      'DOGSO dentro del área = roja + penalti (con excepciones)',
+      'Simulación y conducta antideportiva = tarjeta amarilla',
+      'Doble amarilla equivale a tarjeta roja',
+      'El portero tiene 6 segundos para poner el balón en juego',
+    ],
+  },
+  14: {
+    desc: 'Se concede cuando se comete una infracción de tiro libre directo dentro del área propia. Lanzamiento desde el punto de penalti.',
+    puntos: [
+      'El portero debe tener al menos un pie en la línea hasta el disparo',
+      'Si el portero se adelanta y para, se repite el penalti',
+      'Si el balón rebota en el poste y entra, es gol válido',
+      'Los jugadores deben estar fuera del área y detrás del punto de penalti',
+    ],
+  },
+}
+
+export const BADGES_DEF = [
+  { id: 'primer_test',  cat: 'tests',       icon: 'ti-clipboard-check', cls: 'navy',   name: 'Primer silbato',      sub: 'Completa tu primer test',           rarity: 'bronze', xp: 50,   total: 1,  desc: '¡Bienvenido al sistema! Completaste tu primer test y ya estás en el camino correcto.' },
+  { id: 'racha7',       cat: 'constancia',  icon: 'ti-flame',            cls: 'orange', name: 'Semana de fuego',     sub: '7 días de racha',                   rarity: 'silver', xp: 200,  total: 7,  desc: 'Practicaste 7 días seguidos. La constancia es la clave del buen árbitro.' },
+  { id: 'regla12_100',  cat: 'reglas',      icon: 'ti-shield-check',     cls: 'green',  name: 'Ley del juego',       sub: '100% en Regla 12',                  rarity: 'gold',   xp: 150,  total: 1,  desc: 'Consigue el 100% de acierto en el test completo de Faltas e Incorrecciones.' },
+  { id: 'madrugador',   cat: 'constancia',  icon: 'ti-sun',              cls: 'gold',   name: 'Madrugador',          sub: 'Test antes de las 9h',              rarity: 'bronze', xp: 100,  total: 1,  desc: 'Los mejores árbitros se preparan antes de que salga el sol.' },
+  { id: 'ojo_halcon',   cat: 'situaciones', icon: 'ti-eye',              cls: 'navy',   name: 'Ojo de halcón',       sub: '5 situaciones correctas',           rarity: 'silver', xp: 300,  total: 5,  desc: 'Tu visión de juego es tu herramienta. Resuelve 5 situaciones de partido.' },
+  { id: 'podio',        cat: 'ranking',     icon: 'ti-trophy',           cls: 'gold',   name: 'Podio',               sub: 'Entra en el top 3',                 rarity: 'gold',   xp: 500,  total: 1,  desc: 'Consigue estar entre los 3 primeros árbitros del ranking global.' },
+  { id: 'maestro17',    cat: 'reglas',      icon: 'ti-crown',            cls: 'gold',   name: 'Maestro arbitral',    sub: '17 tests completados',              rarity: 'platinum',xp: 750, total: 17, desc: 'Completa el test de cada una de las 17 reglas al menos una vez.' },
+  { id: 'examen_10',    cat: 'tests',       icon: 'ti-star',             cls: 'orange', name: 'Examen perfecto',     sub: '100% en cualquier test',            rarity: 'silver', xp: 200,  total: 1,  desc: 'Obtén el 100% de aciertos en un test completo sin fallar ni una.' },
+  { id: 'debut',        cat: 'tests',       icon: 'ti-bolt',             cls: 'green',  name: 'Debut estelar',       sub: '90%+ en el primer intento',         rarity: 'bronze', xp: 120,  total: 1,  desc: 'Supera el 90% de acierto la primera vez que realizas cualquier test.' },
+  { id: 'mes_completo', cat: 'constancia',  icon: 'ti-calendar',         cls: 'navy',   name: 'Mes completo',        sub: '30 tests en un mes',                rarity: 'gold',   xp: 400,  total: 30, desc: 'La regularidad construye excelencia. Completa 30 tests en un mismo mes.' },
+  { id: 'sit10',        cat: 'situaciones', icon: 'ti-video',            cls: 'orange', name: 'Árbitro en forma',    sub: '10 situaciones resueltas',          rarity: 'gold',   xp: 600,  total: 10, desc: 'Resuelve correctamente 10 situaciones de partido.' },
+  { id: 'veterano',     cat: 'constancia',  icon: 'ti-award',            cls: 'gold',   name: 'Veterano',            sub: '100 tests completados',             rarity: 'platinum',xp:1000, total:100, desc: '100 tests completados. Eres un referente en la formación arbitral.' },
+]
+
+export const RARITY_LABEL = { bronze: 'Bronce', silver: 'Plata', gold: 'Oro', platinum: 'Platino' }
+export const RARITY_COLOR = { bronze: '#cd7f32', silver: '#94a3b8', gold: '#a16207', platinum: '#7c3aed' }
+
+export const SITUATIONS_SEED = [
+  {
+    rule_ref: 'Regla 12',
+    title: '¿Falta o juego brusco?',
+    description: 'Jugador rival cae al área tras contacto del defensor',
+    difficulty: 'med',
+    scene_text: 'Minuto 67. El delantero penetra en el área por banda derecha. El defensor llega ligeramente tarde y hace contacto en la pierna de apoyo. El atacante cae al suelo.',
+    question: '¿Qué señalas?',
+    options: [
+      { text: 'Penalti — falta dentro del área', icon: 'ti-circle-dot' },
+      { text: 'Tiro libre indirecto — juego peligroso', icon: 'ti-arrows-right' },
+      { text: 'Ventaja — continúa el juego', icon: 'ti-player-play' },
+      { text: 'No hay infracción — contacto fortuito', icon: 'ti-x' },
+    ],
+    correct_option: 0,
+    explanation: 'El contacto en la pierna de apoyo dentro del área es una falta directa. Al ocurrir dentro del área del equipo defensor, corresponde lanzamiento de penalti (Regla 12 + Regla 14).',
+  },
+  {
+    rule_ref: 'Regla 11',
+    title: '¿Fuera de juego activo?',
+    description: 'Gol anulado: ¿estaba el delantero activo?',
+    difficulty: 'hard',
+    scene_text: 'Un mediapunta remata a puerta. Un compañero en posición de fuera de juego está a 8 metros del portero rival, en su línea de visión directa al balón.',
+    question: 'El jugador en fuera de juego no toca el balón pero está a 8 m del portero. ¿Gol o fuera de juego?',
+    options: [
+      { text: 'Gol válido — el delantero no interviene', icon: 'ti-check' },
+      { text: 'Fuera de juego — su presencia condiciona al portero', icon: 'ti-flag' },
+      { text: 'Revisar con VAR antes de decidir', icon: 'ti-eye' },
+      { text: 'Repetir el saque de centro como gol', icon: 'ti-refresh' },
+    ],
+    correct_option: 1,
+    explanation: 'Aunque el jugador no toca el balón, su posición a 8 m impide al portero moverse libremente. Esto constituye "interferir con un rival" según la Regla 11.',
+  },
+  {
+    rule_ref: 'Regla 12',
+    title: '¿DOGSO o tarjeta amarilla?',
+    description: 'Última oportunidad de gol frustrada por agarre',
+    difficulty: 'hard',
+    scene_text: 'Delantero en carrera hacia portería vacía. El defensor lo alcanza y agarra su camiseta desde atrás para frenarlo. Falta clara. El delantero tenía posición y dirección de gol.',
+    question: 'El defensor frustra el gol con un agarre. ¿Cuál es la sanción correcta?',
+    options: [
+      { text: 'Tarjeta roja (DOGSO) + penalti', icon: 'ti-card-fan' },
+      { text: 'Tarjeta amarilla + tiro libre directo', icon: 'ti-square' },
+      { text: 'Penalti sin tarjeta', icon: 'ti-circle-dot' },
+      { text: 'Tarjeta roja + tiro libre directo', icon: 'ti-card-fan' },
+    ],
+    correct_option: 0,
+    explanation: 'DOGSO dentro del área siempre conlleva tarjeta roja y penalti. Los 4 criterios concurren: dirección de gol, último defensor, portero adelantado, control del balón.',
+  },
+  {
+    rule_ref: 'Regla 9',
+    title: '¿Gol o no gol sin tecnología?',
+    description: 'El balón parece cruzar pero rebota en el larguero',
+    difficulty: 'easy',
+    scene_text: 'Disparo potente que golpea el larguero desde arriba. La imagen muestra el balón impactando justo en la línea de gol. No hay tecnología de línea disponible.',
+    question: '¿Qué hace el árbitro sin tecnología de línea?',
+    options: [
+      { text: 'Concede el gol si tiene certeza visual', icon: 'ti-check' },
+      { text: 'No concede sin tecnología confirmada', icon: 'ti-x' },
+      { text: 'Repite la jugada con balón a tierra', icon: 'ti-refresh' },
+      { text: 'Consulta al asistente y decide', icon: 'ti-eye' },
+    ],
+    correct_option: 3,
+    explanation: 'Sin tecnología, el árbitro consulta con el asistente de esa banda. Si ninguno tiene certeza, no se concede el gol. La duda beneficia al equipo defensor.',
+  },
+  {
+    rule_ref: 'Regla 15',
+    title: 'Error en el saque de banda',
+    description: 'El sacador levanta un pie antes de lanzar',
+    difficulty: 'easy',
+    scene_text: 'Minuto 20. El jugador que saca de banda levanta un pie del suelo antes de lanzar el balón. El árbitro asistente lo detecta inmediatamente.',
+    question: '¿Qué corresponde hacer?',
+    options: [
+      { text: 'Saque para el equipo contrario', icon: 'ti-x' },
+      { text: 'Repetir el saque con el mismo equipo', icon: 'ti-refresh' },
+      { text: 'Dejarlo jugar si el saque fue limpio', icon: 'ti-check' },
+      { text: 'Tarjeta amarilla al sacador', icon: 'ti-square' },
+    ],
+    correct_option: 0,
+    explanation: 'Si el saque de banda no se ejecuta correctamente, el balón pasa al equipo contrario. Ambos pies deben estar en el suelo. No hay tarjeta salvo pérdida de tiempo deliberada.',
+  },
+  {
+    rule_ref: 'Regla 3',
+    title: '4.º cambio en competición',
+    description: 'El entrenador pide el cuarto cambio',
+    difficulty: 'easy',
+    scene_text: 'Partido oficial. El entrenador local pide el 4.º cambio en el minuto 75. Ya ha realizado 3 sustituciones en el partido.',
+    question: '¿Qué debe hacer el árbitro?',
+    options: [
+      { text: 'Permitir el cambio, son 5 en partidos oficiales', icon: 'ti-check' },
+      { text: 'Rechazar el cambio, el límite es 3', icon: 'ti-x' },
+      { text: 'Aceptar solo si hay tiempo añadido', icon: 'ti-clock' },
+      { text: 'Permitir solo si es por lesión', icon: 'ti-user-plus' },
+    ],
+    correct_option: 1,
+    explanation: 'En competición oficial estándar el límite es 3 sustituciones. El árbitro rechaza el cambio. Solo en competiciones que hayan adoptado explícitamente la norma de 5 sustituciones se puede ampliar.',
+  },
+]
