@@ -6,16 +6,19 @@ const navItems = [
   { to: '/tests',       icon: 'ti-clipboard-check',  label: 'Tests',        group: 'Principal' },
   { to: '/situaciones', icon: 'ti-video',             label: 'Situaciones',  group: 'Principal' },
   { to: '/temario',     icon: 'ti-book',              label: 'Temario',      group: 'Principal' },
-  { to: '/insignias',   icon: 'ti-medal',             label: 'Insignias',    group: 'Progreso', badge: '2' },
-  { to: '/misiones',    icon: 'ti-target',            label: 'Misiones',     group: 'Progreso', badge: '3' },
+  { to: '/insignias',   icon: 'ti-medal',             label: 'Insignias',    group: 'Progreso' },
+  { to: '/misiones',    icon: 'ti-target',            label: 'Misiones',     group: 'Progreso' },
   { to: '/ranking',     icon: 'ti-trophy',            label: 'Ranking',      group: 'Progreso' },
 ]
 
 const adminItems = [
-  { to: '/admin/usuarios',   icon: 'ti-users',    label: 'Usuarios' },
-  { to: '/admin/preguntas',  icon: 'ti-database', label: 'Preguntas' },
-  { to: '/admin/situaciones',icon: 'ti-video',    label: 'Situaciones' },
-  { to: '/admin/temario',    icon: 'ti-book',     label: 'Temario' },
+  { to: '/admin',             icon: 'ti-layout-dashboard', label: 'Resumen' },
+  { to: '/admin/usuarios',    icon: 'ti-users',             label: 'Usuarios' },
+  { to: '/admin/preguntas',   icon: 'ti-database',          label: 'Preguntas' },
+  { to: '/admin/examenes',    icon: 'ti-file-certificate',  label: 'Exámenes' },
+  { to: '/admin/situaciones', icon: 'ti-video',             label: 'Situaciones' },
+  { to: '/admin/simulacros',  icon: 'ti-player-play',       label: 'Simulacros' },
+  { to: '/admin/temario',     icon: 'ti-book',              label: 'Temario' },
 ]
 
 const groups = ['Principal', 'Progreso']
@@ -44,12 +47,12 @@ export default function Layout() {
         </NavLink>
 
         <nav className="topnav-wrap">
-          <NavLink to="/"            className={({isActive})=>`tn${isActive?' on':''}`}><i className="ti ti-layout-dashboard" /> Inicio</NavLink>
-          <NavLink to="/tests"       className={({isActive})=>`tn${isActive?' on':''}`}><i className="ti ti-clipboard-check" /> Tests</NavLink>
-          <NavLink to="/situaciones" className={({isActive})=>`tn${isActive?' on':''}`}><i className="ti ti-video" /> Situaciones</NavLink>
-          <NavLink to="/insignias"   className={({isActive})=>`tn${isActive?' on':''}`}><i className="ti ti-medal" /> Insignias</NavLink>
+          <NavLink to="/"            className={({ isActive }) => `tn${isActive ? ' on' : ''}`}><i className="ti ti-layout-dashboard" /> Inicio</NavLink>
+          <NavLink to="/tests"       className={({ isActive }) => `tn${isActive ? ' on' : ''}`}><i className="ti ti-clipboard-check" /> Tests</NavLink>
+          <NavLink to="/situaciones" className={({ isActive }) => `tn${isActive ? ' on' : ''}`}><i className="ti ti-video" /> Situaciones</NavLink>
+          <NavLink to="/insignias"   className={({ isActive }) => `tn${isActive ? ' on' : ''}`}><i className="ti ti-medal" /> Insignias</NavLink>
           {profile?.role === 'admin' && (
-            <NavLink to="/admin" className={({isActive})=>`tn${isActive?' on':''}`}><i className="ti ti-settings" /> Admin</NavLink>
+            <NavLink to="/admin" className={({ isActive }) => `tn${isActive ? ' on' : ''}`}><i className="ti ti-settings" /> Admin</NavLink>
           )}
         </nav>
 
@@ -73,7 +76,6 @@ export default function Layout() {
                 >
                   <i className={`ti ${item.icon}`} />
                   {item.label}
-                  {item.badge && <span className="si-badge">{item.badge}</span>}
                 </NavLink>
               ))}
             </div>
@@ -86,6 +88,7 @@ export default function Layout() {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  end={item.to === '/admin'}
                   className={({ isActive }) => `si${isActive ? ' on' : ''}`}
                 >
                   <i className={`ti ${item.icon}`} />
