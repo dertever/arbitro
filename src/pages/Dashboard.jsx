@@ -6,10 +6,12 @@ import { BADGES_DEF, RARITY_LABEL } from '../lib/data'
 
 export default function Dashboard() {
   const { profile } = useAuth()
-  const [stats, setStats] = useState({ tests: 0, correct_pct: 0 })
+  const [stats, setStats] = useState({ tests: 0, correct_pct: 0, situaciones: 0, examenes: 0 })
   const [unlockedBadges, setUnlockedBadges] = useState([])
   const [recentSits, setRecentSits] = useState([])
+  const [nextExam, setNextExam] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   const name = profile?.full_name ?? 'Árbitro'
   const xp = profile?.xp ?? 0
@@ -18,22 +20,32 @@ export default function Dashboard() {
   const xpPct = Math.round((xpInLevel / 500) * 100)
 
   useEffect(() => {
-    if (!profile) {
-      // profile still loading from auth — wait
-      return
-    }
+    if (!profile) return
     let cancelled = false
+    // Timeout de seguridad: si en 8s no carga, mostrar error en vez de spinner infinito
+    const timeout = setTimeout(() => {
+      if (!cancelled) { setLoadError(true); setLoading(false) }
+    }, 8000)
+
     async function load() {
       try {
-        const [{ data: testData }, { data: badgeData }, { data: sitData }] = await Promise.all([
+        const [
+          { data: testData },
+          { data: badgeData },
+          { data: sitData },
+          { data: sitAnswers },
+          { data: examData },
+        ] = await Promise.all([
           supabase.from('test_results').select('score, total').eq('user_id', profile.id).order('created_at', { ascending: false }).limit(50),
           supabase.from('user_badges').select('badge_id, created_at').eq('user_id', profile.id),
           supabase.from('situations').select('id, title, rule_ref, difficulty').limit(6),
+          supabase.from('situation_answers').select('id').eq('user_id', profile.id),
+          supabase.from('exams').select('id, title, available_from, available_until, passing_score').eq('is_active', true).gte('available_until', new Date().toISOString()).order('available_from').limit(1),
         ])
         if (cancelled) return
         if (testData?.length) {
           const pct = Math.round(testData.reduce((a, t) => a + (t.score / t.total), 0) / testData.length * 100)
-          setStats({ tests: testData.length, correct_pct: pct })
+          setStats(s => ({ ...s, tests: testData.length, correct_pct: pct, situaciones: sitAnswers?.length ?? 0 }))
         }
         if (badgeData) {
           setUnlockedBadges(
@@ -43,18 +55,60 @@ export default function Dashboard() {
           )
         }
         if (sitData) setRecentSits(sitData)
+        if (examData?.[0]) setNextExam(examData[0])
       } catch (e) {
         console.error('Dashboard load error:', e)
+        if (!cancelled) setLoadError(true)
       } finally {
+        clearTimeout(timeout)
         if (!cancelled) setLoading(false)
       }
     }
     load()
-    return () => { cancelled = true }
+    return () => { cancelled = true; clearTimeout(timeout) }
   }, [profile])
 
-  // If profile not yet loaded, show spinner
-  if (!profile || loading) return <div className="spinner" />
+  // Supabase no configurado o perfil nulo tras timeout
+  if (!profile && !loading) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 16, padding: 40, maxWidth: 420, textAlign: 'center' }}>
+          <i className="ti ti-alert-triangle" style={{ fontSize: 40, color: 'var(--orange)', display: 'block', marginBottom: 16 }} />
+          <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, color: 'var(--navy)', marginBottom: 8 }}>No se pudo cargar el perfil</h3>
+          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
+            Comprueba que las variables de entorno <code style={{ background: 'var(--off)', padding: '1px 5px', borderRadius: 4 }}>VITE_SUPABASE_URL</code> y <code style={{ background: 'var(--off)', padding: '1px 5px', borderRadius: 4 }}>VITE_SUPABASE_ANON_KEY</code> están configuradas en Vercel.
+          </p>
+          <button className="btn btn-navy btn-sm" onClick={() => window.location.reload()}>
+            <i className="ti ti-refresh" /> Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!profile || loading) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 12 }}>
+      <div className="spinner" />
+      <p style={{ fontSize: 13, color: 'var(--muted)' }}>Cargando tu panel...</p>
+    </div>
+  )
+
+  if (loadError) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 16, padding: 40, maxWidth: 400, textAlign: 'center' }}>
+          <i className="ti ti-wifi-off" style={{ fontSize: 40, color: 'var(--err)', display: 'block', marginBottom: 16 }} />
+          <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, color: 'var(--navy)', marginBottom: 8 }}>Error al cargar datos</h3>
+          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
+            No se pudo conectar con la base de datos. Comprueba tu conexión e inténtalo de nuevo.
+          </p>
+          <button className="btn btn-navy btn-sm" onClick={() => window.location.reload()}>
+            <i className="ti ti-refresh" /> Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   const iconBgMap    = { navy: '#eef1f8', orange: 'var(--orange-soft)', green: 'var(--ok-bg)', gold: '#fefce8', silver: '#f8fafc' }
   const iconColorMap = { navy: 'var(--navy3)', orange: 'var(--orange2)', green: 'var(--ok)', gold: '#a16207', silver: 'var(--silver)' }
@@ -65,6 +119,22 @@ export default function Dashboard() {
         <h2>Bienvenido de nuevo</h2>
         <p>Continúa tu formación arbitral — aquí tienes tu resumen.</p>
       </div>
+
+      {/* Alerta examen próximo */}
+      {nextExam && (
+        <div style={{ background: 'var(--orange-soft)', border: '1.5px solid var(--orange)', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
+          <i className="ti ti-calendar-event" style={{ fontSize: 24, color: 'var(--orange)', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>Examen disponible: {nextExam.title}</div>
+            <div style={{ fontSize: 11, color: 'var(--orange2)' }}>
+              Hasta el {new Date(nextExam.available_until).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })} · Nota mínima: {nextExam.passing_score}%
+            </div>
+          </div>
+          <Link to="/examenes" className="btn btn-orange btn-sm">
+            <i className="ti ti-arrow-right" /> Ir al examen
+          </Link>
+        </div>
+      )}
 
       {/* Hero */}
       <div className="hero">
@@ -155,6 +225,7 @@ export default function Dashboard() {
           <Link to="/tests" className="btn btn-navy"><i className="ti ti-clipboard-check" aria-hidden="true" /> Empezar test</Link>
           <Link to="/situaciones" className="btn btn-orange"><i className="ti ti-video" aria-hidden="true" /> Resolver situación</Link>
           <Link to="/temario" className="btn btn-outline"><i className="ti ti-book" aria-hidden="true" /> Repasar temario</Link>
+          {nextExam && <Link to="/examenes" className="btn btn-outline" style={{ borderColor: 'var(--orange)', color: 'var(--orange)' }}><i className="ti ti-file-certificate" aria-hidden="true" /> Examen oficial</Link>}
         </div>
       </div>
     </>
