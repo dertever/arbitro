@@ -27,7 +27,7 @@ export default function Situaciones() {
 
   useEffect(() => {
     if (id && situations.length) {
-      const sit = situations.find(s => s.id === id || s.id === parseInt(id))
+      const sit = situations.find(s => String(s.id) === String(id))
       if (sit) openSituation(sit)
     }
   }, [id, situations])

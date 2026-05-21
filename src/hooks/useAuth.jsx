@@ -4,32 +4,56 @@ import { supabase } from '../lib/supabase'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // 1. Check existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setLoading(false)
+      const u = session?.user ?? null
+      setUser(u)
+      if (u) {
+        fetchProfile(u.id)
+      } else {
+        setLoading(false)
+      }
     })
+
+    // 2. Listen to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
+      const u = session?.user ?? null
+      setUser(u)
+      if (u) {
+        fetchProfile(u.id)
+      } else {
+        setProfile(null)
+        setLoading(false)
+      }
     })
+
     return () => subscription.unsubscribe()
   }, [])
 
   async function fetchProfile(userId) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data)
-    setLoading(false)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('fetchProfile error:', error.message)
+        // Profile may not exist yet (trigger hasn't run) — keep null but unblock
+      }
+      setProfile(data ?? null)
+    } catch (e) {
+      console.error('fetchProfile exception:', e)
+      setProfile(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function signIn(email, password) {
@@ -39,8 +63,9 @@ export function AuthProvider({ children }) {
 
   async function signUp(email, password, fullName) {
     const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName } }
+      email,
+      password,
+      options: { data: { full_name: fullName } },
     })
     return error
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, NavLink, useNavigate } from 'react-router-dom'
+import { Routes, Route, NavLink } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../hooks/useToast'
 import { REGLAS } from '../lib/data'
